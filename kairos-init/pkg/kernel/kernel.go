@@ -43,7 +43,7 @@ func GetLatestFromPath(modulesPath, model string, l logger.KairosLogger) (string
 
 	// Ubuntu RPi images must boot the raspi kernel: the generic HWE kernel lacks
 	// the Pi SD/MMC drivers needed under UEFI (see kairos-io/kairos#4222).
-	if model == values.Rpi3.String() && model == values.Rpi4.String() {
+	if model == values.Rpi3.String() || model == values.Rpi4.String() {
 		var raspiVersions []*semver.Version
 		var raspiFallback []string
 		for _, dir := range dirs {
@@ -84,14 +84,14 @@ func GetLatestFromPath(modulesPath, model string, l logger.KairosLogger) (string
 	// We could have no semver version but custom versions like 5.4.0-101-generic.fc32.x86_64
 	// In that case we need to just use the full name
 	if len(versions) == 0 {
-		if len(dirs) > 1 {
-			kernelVersion = dirs[len(dirs)-1].Name()
+		if len(dirs) >= 1 {
+			kernelVersion = dirs[0].Name()
 		} else {
 			return kernelVersion, fmt.Errorf("no kernel versions found")
 		}
 	} else {
 		sort.Sort(semver.Collection(versions))
-		kernelVersion = versions[0].String()
+		kernelVersion = versions[len(versions)-1].String()
 		if kernelVersion == "" {
 			l.Logger.Error().Msgf("Failed to find the latest kernel version")
 			return kernelVersion, fmt.Errorf("failed to find the latest kernel")
