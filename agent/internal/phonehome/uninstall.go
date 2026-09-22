@@ -62,10 +62,12 @@ func Uninstall(stopService bool) (string, error) {
 	note := func(msg string) { lines = append(lines, msg) }
 	noteErr := func(msg string, err error) {
 		lines = append(lines, msg)
-		fatal = err
+		if fatal == nil {
+			fatal = err
+		}
 	}
 
-	if !stopService {
+	if stopService {
 		if out, err := runCommand("systemctl", "stop", ServiceName); err != nil {
 			note(fmt.Sprintf("stopping %s: %s (%s)", ServiceName, strings.TrimSpace(string(out)), err))
 		} else {
@@ -83,7 +85,7 @@ func Uninstall(stopService bool) (string, error) {
 
 	if err := removeFile(ServicePath); err != nil {
 		if os.IsNotExist(err) {
-			noteErr("unit file already absent: "+ServicePath, err)
+			note("unit file already absent: " + ServicePath)
 		} else {
 			noteErr(fmt.Sprintf("removing %s: %v", ServicePath, err), err)
 		}
