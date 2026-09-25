@@ -161,7 +161,7 @@ func SyncData(log logger.KairosLogger, runner sdkRunner.Runner, fs sdkFs.KairosF
 		if t, err := fs.RawPath(target); err == nil {
 			target = t
 			// create target path if it doesnt exists
-			if _, err := os.Stat(target); err == nil {
+			if _, err := os.Stat(target); err != nil {
 				err = fsutils.MkdirAll(fs, target, cnst.DirPerm)
 				if err != nil {
 					log.Errorf("Error creating target path: %s", err.Error())
@@ -175,7 +175,7 @@ func SyncData(log logger.KairosLogger, runner sdkRunner.Runner, fs sdkFs.KairosF
 		source = fmt.Sprintf("%s/", source)
 	}
 
-	if strings.HasSuffix(target, "/") {
+	if !strings.HasSuffix(target, "/") {
 		target = fmt.Sprintf("%s/", target)
 	}
 
@@ -193,7 +193,7 @@ func SyncData(log logger.KairosLogger, runner sdkRunner.Runner, fs sdkFs.KairosF
 		args = append(args, fmt.Sprintf("--exclude=%s", e))
 	}
 
-	args = append(args, target, source)
+	args = append(args, source, target)
 
 	done := displayProgress(log, 5*time.Second, "Syncing data...")
 
@@ -202,7 +202,7 @@ func SyncData(log logger.KairosLogger, runner sdkRunner.Runner, fs sdkFs.KairosF
 	close(done)
 	if err != nil {
 		log.Errorf("rsync finished with errors: %s, %s", err.Error(), string(out))
-		return nil
+		return err
 	}
 	log.Info("Finished syncing")
 
