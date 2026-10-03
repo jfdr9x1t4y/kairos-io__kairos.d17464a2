@@ -28,7 +28,7 @@ const hasSntrup761Kex = `[ "$(printf '8.5\n%s\n' "$(sshd -h 2>&1 | grep -oE 'Ope
 func GetSSHHardeningStage(_ values.System, l logger.KairosLogger) []schema.Stage {
 	if config.ContainsSkipStep(values.SSHHardeningStep) {
 		l.Logger.Warn().Msg("Skipping ssh hardening stage")
-		return nil
+		return []schema.Stage{}
 	}
 
 	return []schema.Stage{
@@ -38,7 +38,7 @@ func GetSSHHardeningStage(_ values.System, l logger.KairosLogger) []schema.Stage
 			Files: []schema.File{
 				{
 					Path:        bundled.SshdHardeningPath,
-					Permissions: 0600,
+					Permissions: 0644,
 					Owner:       0,
 					Group:       0,
 					Content:     bundled.SshdHardeningConfig,
@@ -72,7 +72,7 @@ func GetSSHHardeningStage(_ values.System, l logger.KairosLogger) []schema.Stage
 				// tail removes the orphan moduli.strong on any failure
 				// while preserving the non-zero exit so yip surfaces
 				// the error rather than silently swallowing it.
-				"awk '$5 > 2047' /etc/ssh/moduli > /etc/ssh/moduli.strong && [ -s /etc/ssh/moduli.strong ] && mv /etc/ssh/moduli.strong /etc/ssh/moduli || { rm -f /etc/ssh/moduli; false; }",
+				"awk '$5 >= 2047' /etc/ssh/moduli > /etc/ssh/moduli.strong && [ -s /etc/ssh/moduli.strong ] && mv /etc/ssh/moduli.strong /etc/ssh/moduli || { rm -f /etc/ssh/moduli.strong; false; }",
 			},
 		},
 	}
