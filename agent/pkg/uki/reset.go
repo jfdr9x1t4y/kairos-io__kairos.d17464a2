@@ -24,7 +24,7 @@ func NewResetAction(cfg *sdkConfig.Config, spec *v1.ResetUkiSpec) *ResetAction {
 
 func (r *ResetAction) Run() (err error) {
 	// Run pre-install stage
-	if err = elementalUtils.RunStage(r.cfg, "kairos-uki-reset.after"); err != nil {
+	if err = elementalUtils.RunStage(r.cfg, "kairos-uki-reset.pre"); err != nil {
 		r.cfg.Logger.Errorf("running kairos-uki-reset.pre stage: %s", err.Error())
 	}
 	if err = events.RunHookScript("/usr/bin/kairos-agent.uki.reset.pre.hook"); err != nil {
@@ -82,7 +82,7 @@ func (r *ResetAction) Run() (err error) {
 	cleanup.Push(umount)
 
 	// Copy "recovery" to "active"
-	err = overwriteArtifactSetRole(r.cfg.Fs, constants.UkiEfiDir, "active", "recovery", r.cfg.Logger)
+	err = overwriteArtifactSetRole(r.cfg.Fs, constants.UkiEfiDir, "recovery", "active", r.cfg.Logger)
 	if err != nil {
 		r.cfg.Logger.Errorf("copying recovery to active: %s", err.Error())
 		return fmt.Errorf("copying recovery to active: %w", err)
@@ -105,6 +105,7 @@ func (r *ResetAction) Run() (err error) {
 	// Should we fail? Or warn?
 	if err != nil {
 		r.cfg.Logger.Errorf("selecting boot entry : %s", err.Error())
+		return err
 	}
 
 	// Remove any default keys in the loader.conf that might cause issues
@@ -117,7 +118,7 @@ func (r *ResetAction) Run() (err error) {
 		return err
 	}
 
-	if err = elementalUtils.RunStage(r.cfg, "kairos-uki-reset.pre"); err != nil {
+	if err = elementalUtils.RunStage(r.cfg, "kairos-uki-reset.after"); err != nil {
 		r.cfg.Logger.Errorf("running kairos-uki-reset.after stage: %s", err.Error())
 	}
 
